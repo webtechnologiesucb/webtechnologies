@@ -5,6 +5,7 @@ function httpRequest($url, $method, $data = [])
 {
     $curl = curl_init($url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    print(curl_setopt($curl, CURLOPT_RETURNTRANSFER, true));
 
     if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
