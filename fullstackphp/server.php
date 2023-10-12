@@ -4,29 +4,42 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 header('Content-Type: application/json');
 header('Access-Control-Allow-Credentials: true');
 
-// Array para almacenar las tareas
-$tareas = array();
-//$tareas = ['Caminar', 'Ejercitar'];
+// Array para almacenar las tareas (simulado en memoria, en un escenario real usarías una base de datos)
+$tareas = ["Trabajar proyecto", "Desarrollar codigo"];
 
+// Ruta para obtener todas las tareas
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Ruta GET para obtener todas las tareas
     echo json_encode($tareas);
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Ruta POST para crear una nueva tarea
-    $data = json_decode(file_get_contents("php://input"), true);
-    $tareas[] = $data['tarea'];
-    echo json_encode(['message' => 'Tarea agregada con éxito']);
-} elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    // Ruta DELETE para eliminar una tarea por índice
-    $index = $_GET['index']; // Utilizamos un parámetro en la URL en lugar de un parámetro en la ruta
-    if (isset($tareas[$index])) {
-        array_splice($tareas, $index, 1);
-        echo json_encode(['message' => 'Tarea eliminada con éxito']);
+}
+
+// Ruta para agregar una nueva tarea
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    array_push($tareas, $data);
+
+    echo json_encode(['message' => 'Tarea agregada']);
+}
+
+// Ruta para modificar una tarea existente
+if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id = $data['id'];
+    if (isset($tareas[$id])) {
+        $tareas[$id] = $data;
+        echo json_encode(['message' => 'Tarea modificada']);
     } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'Tarea no encontrada']);
+        echo json_encode(['message' => 'Tarea no encontrada']);
     }
-} else {
-    http_response_code(405);
-    echo json_encode(['error' => 'Método no permitido']);
+}
+
+// Ruta para eliminar una tarea
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $id = $data['id'];
+    if (isset($tareas[$id])) {
+        unset($tareas[$id]);
+        echo json_encode(['message' => 'Tarea eliminada']);
+    } else {
+        echo json_encode(['message' => 'Tarea no encontrada']);
+    }
 }

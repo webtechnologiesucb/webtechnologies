@@ -1,52 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Tarea</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-</head>
+// Función para realizar solicitudes HTTP
+function httpRequest($url, $method, $data = [])
+{
+    $curl = curl_init($url);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-<body>
-    <div class="container mt-5">
-        <h1>Registrar Nueva Tarea</h1>
-        <form method="POST">
-            <div class="form-group">
-                <label for="tarea">Tarea:</label>
-                <input type="text" class="form-control" id="tarea" name="tarea" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Agregar Tarea</button>
-        </form>
-    </div>
+    if ($method === 'POST' || $method === 'PUT' || $method === 'DELETE') {
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+    }
 
-    <div class="container mt-5">
-        <h2>Lista de Tareas</h2>
-        <ul>
-            <?php
-            // URL de la API para listar tareas
-            $url = 'http://localhost/webtechnologies/fullstackphp/server.php';
+    $response = curl_exec($curl);
+    curl_close($curl);
 
-            // Realizar una solicitud GET a la API
-            $response = file_get_contents($url);
+    return $response;
+}
 
-            // Decodificar la respuesta JSON
-            $tareas = json_decode($response, true);
+// URL del servicio API
+$apiUrl = 'server.php';
 
-            // Mostrar las tareas en una lista HTML
-            echo '<ul>';
-            foreach ($tareas as $tarea) {
-                echo '<li>' . $tarea . '</li>';
-            }
+// Alta de tarea
+$data = ['task' => 'Nueva tarea'];
+$response = httpRequest($apiUrl, 'POST', $data);
+echo "Alta de tarea: $response <br />";
 
-            echo '</ul>';
-            ?>
-        </ul>
-    </div>
+// Obtener todas las tareas
+$response = httpRequest($apiUrl, 'GET');
+$tareas = json_decode($response, true);
+echo "Todas las tareas: <br />";
+print_r($tareas);
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
+// Modificar una tarea (debes proporcionar un ID válido)
+$id = 0; // Cambia esto al ID de la tarea que deseas modificar
+$data = ['id' => $id, 'task' => 'Tarea modificada'];
+$response = httpRequest($apiUrl, 'PUT', $data);
+echo "Modificación de tarea: $response <br />";
 
-</html>
+// Eliminar una tarea (debes proporcionar un ID válido)
+$id = 0; // Cambia esto al ID de la tarea que deseas eliminar
+$data = ['id' => $id];
+$response = httpRequest($apiUrl, 'DELETE', $data);
+echo "Eliminación de tarea: $response <br />";
