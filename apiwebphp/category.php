@@ -3,63 +3,59 @@
 include_once('config.php'); // Incluye la conexión a la base de datos
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
-header('Content-Type: application/json');
-header('Access-Control-Allow-Credentials: true');
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Credentials: true");
 /** Enciende el reporteador de errores */
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Configura la conexión a la base de datos aquí
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+// Verificar el método de solicitud
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'GET') {
     // Leer categorías
-    $sql = "SELECT * FROM category";
-    $result = $conn->query($sql);
-
+    $result = $conn->query("SELECT * FROM category");
     $categories = array();
-
-    while ($row = $result->fetch_assoc()) {
-        $categories[] = $row;
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $categories[] = $row;
+        }
     }
-
     echo json_encode($categories);
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+} elseif ($method === 'POST') {
     // Crear una nueva categoría
-    $data = json_decode(file_get_contents('php://input'), true);
+    $data = json_decode(file_get_contents("php://input"), true);
     $name = $data['name'];
-
-    $sql = "INSERT INTO category (name) VALUES ('$name')";
-
-    if ($conn->query($sql) === TRUE) {
-        echo json_encode(array("message" => "Categoría creada con éxito"));
+    $stmt = $conn->prepare("INSERT INTO category (name) VALUES (?)");
+    $stmt->bind_param("s", $name);
+    if ($stmt->execute()) {
+        echo "Categoría creada con éxito.";
     } else {
-        echo json_encode(array("error" => $conn->error));
+        echo "Error al crear la categoría: " . $stmt->error;
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+} elseif ($method === 'PUT') {
     // Actualizar una categoría
-    $data = json_decode(file_get_contents('php://input'), true);
-    $category_id = $data['id'];
+    $data = json_decode(file_get_contents("php://input"), true);
+    $categoryId = $data['category_id'];
     $name = $data['name'];
-
-    $sql = "UPDATE category SET name = '$name' WHERE category_id = $category_id";
-
-    if ($conn->query($sql) === TRUE) {
-        echo json_encode(array("message" => "Categoría actualizada con éxito"));
+    $stmt = $conn->prepare("UPDATE category SET name = ? WHERE category_id = ?");
+    $stmt->bind_param("si", $name, $categoryId);
+    if ($stmt->execute()) {
+        echo "Categoría actualizada con éxito.";
     } else {
-        echo json_encode(array("error" => $conn->error));
+        echo "Error al actualizar la categoría: " . $stmt->error;
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+} elseif ($method === 'DELETE') {
     // Eliminar una categoría
-    $data = json_decode(file_get_contents('php://input'), true);
-    $category_id = $data['id'];
-
-    $sql = "DELETE FROM category WHERE category_id = $category_id";
-
-    if ($conn->query($sql) === TRUE) {
-        echo json_encode(array("message" => "Categoría eliminada con éxito"));
+    $categoryId = $_GET['category_id'];
+    $stmt = $conn->prepare("DELETE FROM category WHERE category_id = ?");
+    $stmt->bind_param("i", $categoryId);
+    if ($stmt->execute()) {
+        echo "Categoría eliminada con éxito.";
     } else {
-        echo json_encode(array("error" => $conn->error));
+        echo "Error al eliminar la categoría: " . $stmt->error;
     }
 }
 
-// Cierra la conexión a la base de datos
+// Cerrar la conexión a la base de datos
 $conn->close();
